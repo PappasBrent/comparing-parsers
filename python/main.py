@@ -111,11 +111,7 @@ def interpret(toks: Generator[Token, None, None]) -> int:
 
 
 def main():
-    while True:
-        line = input()
-        if line.strip() == 'q':
-            return
-
+    while (line := input()):
         print(interpret(lex(line)))
 
 
