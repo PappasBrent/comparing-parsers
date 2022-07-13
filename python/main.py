@@ -83,13 +83,20 @@ def interpret(toks: Generator[Token, None, None]) -> int:
 
     def mulop():
         nonlocal cur, next_
-        n = term()
+        n = unop()
         while accept(TokenType.MUL) or accept(TokenType.DIV):
             if TokenType.MUL == cur.ty:
-                n *= term()
+                n *= unop()
             elif TokenType.DIV == cur.ty:
-                n //= term()
+                n //= unop()
         return n
+
+    def unop():
+        parity = 1
+        while accept(TokenType.SUB):
+            parity *= -1
+        n = term()
+        return parity * n
 
     def term():
         nonlocal cur, next_
@@ -97,14 +104,9 @@ def interpret(toks: Generator[Token, None, None]) -> int:
             n = addop()
             expect(TokenType.RPAREN)
             return n
-        return unop()
-
-    def unop():
-        parity = 1
-        while accept(TokenType.SUB):
-            parity *= -1
-        expect(TokenType.INT)
-        return parity * cur.val
+        else:
+            expect(TokenType.INT)
+            return cur.val
 
     advance()  # prime cur and next_
     return addop()

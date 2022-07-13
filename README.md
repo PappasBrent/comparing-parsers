@@ -5,6 +5,7 @@ In this study we implement a simple interpreter for arithmetic expressions in se
 - C
 - Go
 - Haskell
+- Java
 - Python3
 - Rust
 
@@ -13,8 +14,11 @@ Presented in extended Backus-Naur form.
 
 ```
 addop   =   mulop {('+' | '-') mulop};
-mulop   =   term {('*' | '/') term};
-term    =   ('(' expr ')') | unop;
-unop    =   {'-'} integer;
+mulop   =   unop {('*' | '/') unop};
+unop    =   {'-'} term;
+term    =   ('(' expr ')') | integer;
 integer =   digit{digit};
 ```
+
+## Notes
+- Rust's enum variants made it easier to define tokens
