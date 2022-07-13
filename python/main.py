@@ -4,9 +4,9 @@ from typing import Generator, Union
 
 
 class TokenType(Enum):
-    PLUS = auto()
-    MINUS = auto()
-    MULT = auto()
+    ADD = auto()
+    SUB = auto()
+    MUL = auto()
     DIV = auto()
     LPAREN = auto()
     RPAREN = auto()
@@ -22,9 +22,9 @@ class Token:
 def lex(s: str) -> Generator[Token, None, None]:
 
     char_to_type = {
-        '+': TokenType.PLUS,
-        '-': TokenType.MINUS,
-        '*': TokenType.MULT,
+        '+': TokenType.ADD,
+        '-': TokenType.SUB,
+        '*': TokenType.MUL,
         '/': TokenType.DIV,
         '(': TokenType.LPAREN,
         ')': TokenType.RPAREN,
@@ -74,18 +74,18 @@ def interpret(toks: Generator[Token, None, None]) -> int:
     def addop():
         nonlocal cur, next_
         n = mulop()
-        while accept(TokenType.PLUS) or accept(TokenType.MINUS):
-            if TokenType.PLUS == cur.ty:
+        while accept(TokenType.ADD) or accept(TokenType.SUB):
+            if TokenType.ADD == cur.ty:
                 n += mulop()
-            elif TokenType.MINUS == cur.ty:
+            elif TokenType.SUB == cur.ty:
                 n -= mulop()
         return n
 
     def mulop():
         nonlocal cur, next_
         n = term()
-        while accept(TokenType.MULT) or accept(TokenType.DIV):
-            if TokenType.MULT == cur.ty:
+        while accept(TokenType.MUL) or accept(TokenType.DIV):
+            if TokenType.MUL == cur.ty:
                 n *= term()
             elif TokenType.DIV == cur.ty:
                 n //= term()
@@ -101,7 +101,7 @@ def interpret(toks: Generator[Token, None, None]) -> int:
 
     def unop():
         parity = 1
-        while accept(TokenType.MINUS):
+        while accept(TokenType.SUB):
             parity *= -1
         expect(TokenType.INT)
         return parity * cur.val
