@@ -82,6 +82,14 @@ expr = (unop term) `chainl1` muldiv `chainl1` addsub
 term :: Parser Integer
 term = spaces *> (parens expr <|> integer)
 
+eof :: Parser [a]
+eof = Parser $ \s -> case s of
+  [] -> Just ([], [])
+  c : str -> Nothing
+
+interpret :: Parser Integer
+interpret = expr <* eof
+
 main :: IO ()
 main = do
   end <- isEOF
@@ -89,6 +97,6 @@ main = do
     then exitSuccess
     else do
       line <- getLine
-      case runParser expr line of
+      case runParser interpret line of
         Nothing -> putStrLn "Bad parse" >> main
         Just (n, rst) -> print n >> main
