@@ -40,6 +40,16 @@ p `chainl1` op = p >>= rst
   where
     rst a = ((op <*> pure a <*> p) >>= rst) <|> return a
 
+chainr1 :: Parser a -> Parser (a -> a -> a) -> Parser a
+p `chainr1` op = p >>= rst
+  where
+    rst a = ((op <*> p <*> pure a) >>= rst) <|> return a
+
+eof :: Parser [a]
+eof = Parser $ \s -> case s of
+  [] -> Just ([], [])
+  c : str -> Nothing
+
 satisfy :: (Char -> Bool) -> Parser Char
 satisfy pred = Parser $ \s -> case s of
   [] -> Nothing
@@ -47,9 +57,6 @@ satisfy pred = Parser $ \s -> case s of
 
 char :: Char -> Parser Char
 char c = satisfy (== c)
-
-string :: String -> Parser String
-string = foldr (\x -> (<*>) ((:) <$> char x)) (pure [])
 
 digit :: Parser Char
 digit = satisfy isDigit
@@ -66,29 +73,21 @@ between b e p = char b *> p <* char e
 parens :: Parser a -> Parser a
 parens = between '(' ')'
 
-token :: String -> a -> Parser a
-token s t = spaces *> (t <$ string s)
-
 addsub, muldiv :: Parser (Integer -> Integer -> Integer)
-addsub = token "+" (+) <|> token "-" (-)
-muldiv = token "*" (*) <|> token "/" div
+addsub = spaces *> ((+) <$ char '+') <|> ((-) <$ char '-')
+muldiv = spaces *> ((*) <$ char '*') <|> (div <$ char '/')
 
-unop :: Parser Integer -> Parser Integer
-unop p = spaces *> (char '-' *> fmap negate (unop p)) <|> p
+unop :: Parser Integer
+unop = spaces *> (product <$> many (char '-' >> pure (-1)))
 
 expr :: Parser Integer
-expr = (unop term) `chainl1` muldiv `chainl1` addsub
+expr = ((*) <$> unop <*> factor) `chainl1` muldiv `chainl1` addsub
 
-term :: Parser Integer
-term = spaces *> (parens expr <|> integer)
-
-eof :: Parser [a]
-eof = Parser $ \s -> case s of
-  [] -> Just ([], [])
-  c : str -> Nothing
+factor :: Parser Integer
+factor = spaces *> (parens expr <|> integer)
 
 interpret :: Parser Integer
-interpret = expr <* eof
+interpret = expr <* spaces <* eof
 
 main :: IO ()
 main = do
