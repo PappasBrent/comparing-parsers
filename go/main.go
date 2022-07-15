@@ -146,6 +146,24 @@ func (inter *Interpreter) expect(ty TokenType) error {
 	}
 }
 
+func (inter *Interpreter) expectEnd() error {
+	if inter.next != nil {
+		return fmt.Errorf("expected end, got %d", inter.next.Ty)
+	}
+	return nil
+}
+
+func (inter *Interpreter) interpret() (int, error) {
+	n, err := inter.addop()
+	if err != nil {
+		return 0, err
+	}
+	if err = inter.expectEnd(); err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
 func (inter *Interpreter) addop() (int, error) {
 	n, err := inter.mulop()
 	if err != nil {
@@ -231,7 +249,7 @@ func main() {
 			log.Fatalln(err)
 		}
 		inter := NewInterpreter(toks)
-		n, err := inter.addop()
+		n, err := inter.interpret()
 		if err != nil {
 			log.Fatalln(err)
 		}
