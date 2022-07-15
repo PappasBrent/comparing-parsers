@@ -43,6 +43,15 @@ impl<'a> Iterator for Lexer<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // skip whitespace
+        while let Some(c) = self.cur {
+            if c.is_whitespace() {
+                self.advance()
+            } else {
+                break;
+            }
+        }
+        // match token
         if let Some(c) = self.cur {
             let result = match c {
                 '+' => Some(Token::Add),
@@ -64,7 +73,7 @@ impl<'a> Iterator for Lexer<'a> {
                     }
                     Some(Token::Int(n))
                 }
-                _ => None,
+                _ => panic!("unexpected character: {}", c),
             };
             self.advance();
             result
@@ -96,31 +105,19 @@ impl<'a> Interpeter<'a> {
         self.next = self.toks.next();
     }
 
-    fn accept(&mut self, t: Token) -> bool {
-        // this is a little weird, we want to accept this token
-        // if it's the same type as the other one, but we don't
-        // care about values for int tokens
-        if let Some(nt) = self.next {
-            match nt {
-                Token::Int(_) => match t {
-                    Token::Int(_) => {
-                        self.advance();
-                        true
-                    }
-                    _ => false,
-                },
-                t1 if t1 == t => {
-                    self.advance();
-                    true
-                }
-                _ => false,
+    fn accept(&mut self, ot: Option<Token>) -> bool {
+        // accept the next token if it's the given variant
+        match (self.next, ot) {
+            (Some(nt), Some(t)) if std::mem::discriminant(&nt) == std::mem::discriminant(&t) => {
+                self.advance();
+                true
             }
-        } else {
-            false
+            (None, None) => true,
+            _ => false,
         }
     }
 
-    fn expect(&mut self, t: Token) -> Result<(), String> {
+    fn expect(&mut self, t: Option<Token>) -> Result<(), String> {
         if !self.accept(t) {
             Err(format!("Expected {:#?}", t))
         } else {
@@ -129,12 +126,14 @@ impl<'a> Interpeter<'a> {
     }
 
     pub fn interpret(&mut self) -> Result<i32, String> {
-        self.addop()
+        let n = self.addop()?;
+        self.expect(None)?;
+        Ok(n)
     }
 
     fn addop(&mut self) -> Result<i32, String> {
         let mut n = self.mulop()?;
-        while self.accept(Token::Add) || self.accept(Token::Sub) {
+        while self.accept(Some(Token::Add)) || self.accept(Some(Token::Sub)) {
             if self.cur.unwrap() == Token::Add {
                 n += self.mulop()?;
             } else if self.cur.unwrap() == Token::Sub {
@@ -145,7 +144,7 @@ impl<'a> Interpeter<'a> {
     }
     fn mulop(&mut self) -> Result<i32, String> {
         let mut n = self.unop()?;
-        while self.accept(Token::Mul) || self.accept(Token::Div) {
+        while self.accept(Some(Token::Mul)) || self.accept(Some(Token::Div)) {
             if self.cur.unwrap() == Token::Mul {
                 n *= self.unop()?;
             } else if self.cur.unwrap() == Token::Div {
@@ -156,19 +155,19 @@ impl<'a> Interpeter<'a> {
     }
     fn unop(&mut self) -> Result<i32, String> {
         let mut parity = 1;
-        while self.accept(Token::Sub) {
+        while self.accept(Some(Token::Sub)) {
             parity *= -1;
         }
         let n = self.term()?;
         Ok(n * parity)
     }
     fn term(&mut self) -> Result<i32, String> {
-        if self.accept(Token::LParen) {
+        if self.accept(Some(Token::LParen)) {
             let n = self.addop()?;
-            self.expect(Token::RParen)?;
+            self.expect(Some(Token::RParen))?;
             Ok(n)
         } else {
-            self.expect(Token::Int(0))?;
+            self.expect(Some(Token::Int(0)))?;
             match self.cur.unwrap() {
                 Token::Int(n) => Ok(n as i32),
                 _ => Err("Expected an int".to_owned()),
