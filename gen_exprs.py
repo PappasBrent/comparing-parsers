@@ -73,19 +73,18 @@ class Int(Expr):
 
 def gen_expr(depth: int) -> Expr:
     if depth == 0:
-        return Int(randint(1, 100))
+        # use small numbers to (hopefully) avoid overflow
+        # TODO: figure out how to intelligently avoid overflow?
+        return Int(randint(1, 10))
 
     kind = choice([BinExpr, UnExpr, ParenExpr])
 
     if kind == BinExpr:
-        op = choice([operator.add, operator.sub,
-                    operator.mul, operator.floordiv])
+        # don't produce division expressions since different languages
+        # round differently
+        op = choice([operator.add, operator.sub, operator.mul])
         lhs = gen_expr(depth-1)
         rhs = gen_expr(depth-1)
-        # Ensure that we don't create an expression which divides by zero
-        if op == operator.floordiv:
-            while rhs.eval() == 0:
-                rhs = gen_expr(depth-1)
         return BinExpr(op, lhs, rhs)
 
     elif kind == UnExpr:
@@ -101,7 +100,7 @@ def gen_expr(depth: int) -> Expr:
 
 
 def main():
-    for _ in range(1000):
+    for _ in range(100000):
         print(gen_expr(5))
 
 
