@@ -1,5 +1,5 @@
 [package]
-name = "rust"
+name = "arith-interpreter"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 
 [[bin]]
-name = "rust"
+name = "arith-interpreter"
 path = "main.rs"
