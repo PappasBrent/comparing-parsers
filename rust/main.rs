@@ -178,7 +178,11 @@ impl<'a> Interpeter<'a> {
 
 pub fn main() -> Result<(), String> {
     let mut input = String::new();
-    while let Ok(_) = stdin().read_line(&mut input) {
+    while let Ok(n) = stdin().read_line(&mut input) {
+        // check for eof
+        if n == 0 {
+            break;
+        }
         let mut lexer = Lexer::new(&input);
         let mut interpeter = Interpeter::new(&mut lexer);
         let res = interpeter.interpret()?;
