@@ -75,7 +75,7 @@ parens = between '(' ')'
 
 addsub, muldiv :: Parser (Integer -> Integer -> Integer)
 addsub = spaces *> (((+) <$ char '+') <|> ((-) <$ char '-'))
-muldiv = spaces *> (((*) <$ char '*') <|> (div <$ char '/'))
+muldiv = spaces *> (((*) <$ char '*') <|> (quot <$ char '/'))
 
 unop :: Parser Integer
 unop = product <$> many (spaces *> (char '-' >> pure (-1)))
