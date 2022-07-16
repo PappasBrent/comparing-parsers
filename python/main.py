@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Generator, Optional, Union
@@ -121,7 +122,7 @@ def interpret(toks: Generator[Token, None, None]) -> int:
 
 
 def main():
-    while (line := input()):
+    for line in sys.stdin.readlines():
         try:
             print(interpret(lex(line)))
         except SyntaxError as e:
