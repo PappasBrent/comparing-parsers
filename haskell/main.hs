@@ -74,14 +74,14 @@ parens :: Parser a -> Parser a
 parens = between '(' ')'
 
 addsub, muldiv :: Parser (Integer -> Integer -> Integer)
-addsub = spaces *> ((+) <$ char '+') <|> ((-) <$ char '-')
-muldiv = spaces *> ((*) <$ char '*') <|> (div <$ char '/')
+addsub = spaces *> (((+) <$ char '+') <|> ((-) <$ char '-'))
+muldiv = spaces *> (((*) <$ char '*') <|> (div <$ char '/'))
 
 unop :: Parser Integer
-unop = spaces *> (product <$> many (char '-' >> pure (-1)))
+unop = product <$> many (spaces *> (char '-' >> pure (-1)))
 
 expr :: Parser Integer
-expr = ((*) <$> unop <*> factor) `chainl1` muldiv `chainl1` addsub
+expr = spaces *> ((*) <$> unop <*> factor) `chainl1` muldiv `chainl1` addsub
 
 factor :: Parser Integer
 factor = spaces *> (parens expr <|> integer)
