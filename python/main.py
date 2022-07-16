@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Generator, Union
+from typing import Generator, Optional, Union
 
 
 class TokenType(Enum):
@@ -34,17 +34,17 @@ def lex(s: str) -> Generator[Token, None, None]:
     while i < len(s):
         if s[i].isspace():
             pass
+        elif s[i] in char_to_type.keys():
+            yield Token(char_to_type[s[i]], s[i])
         elif s[i].isdigit():
             n = int(s[i])
-            i += 1
-            while i < len(s) and s[i].isdigit():
+            while i+1 < len(s) and s[i+1].isdigit():
                 n *= 10
-                n += int(s[i])
+                n += int(s[i+1])
                 i += 1
-            i -= 1  # put the last char back
             yield Token(TokenType.INT, n)
-        elif s[i] in '+-*/()':
-            yield Token(char_to_type[s[i]], s[i])
+        else:
+            raise SyntaxError(f'unexpected character: {s[i]}')
 
         i += 1  # advance to next char
 
@@ -53,23 +53,31 @@ def interpret(toks: Generator[Token, None, None]) -> int:
 
     cur, next_ = None, None
 
-    def expect(ty: TokenType):
-        nonlocal cur, next_
-        if next_.ty != ty:
-            raise SyntaxError(f"Expected token type '{ty}'")
-        advance()
-
     def advance():
         nonlocal cur, next_
         cur = next_
         next_ = next(toks, None)
 
-    def accept(ty: TokenType):
+    def accept(ty: Optional[TokenType]):
         nonlocal cur, next_
-        if next_ and next_.ty == ty:
+        if next_ is None and ty is None:
+            return True
+        elif next_ is not None and next_.ty == ty:
             advance()
             return True
         return False
+
+    def expect(ty: Optional[TokenType]):
+        nonlocal cur, next_
+        if not accept(ty):
+            raise SyntaxError(
+                f'expected {ty}, got {next_.ty if next_ is not None else next_}')
+        return True
+
+    def interpret():
+        n = addop()
+        expect(None)
+        return n
 
     def addop():
         nonlocal cur, next_
@@ -109,12 +117,16 @@ def interpret(toks: Generator[Token, None, None]) -> int:
             return cur.val
 
     advance()  # prime cur and next_
-    return addop()
+    return interpret()
 
 
 def main():
     while (line := input()):
-        print(interpret(lex(line)))
+        try:
+            print(interpret(lex(line)))
+        except SyntaxError as e:
+            print(f'error: {e}')
+            return 1
 
 
 if __name__ == '__main__':
