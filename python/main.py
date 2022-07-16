@@ -97,7 +97,9 @@ def interpret(toks: Generator[Token, None, None]) -> int:
             if TokenType.MUL == cur.ty:
                 n *= unop()
             elif TokenType.DIV == cur.ty:
-                n //= unop()
+                # divide in this way to round to zero,
+                # python's // operator rounds to negative infinity
+                n = int(n / unop())
         return n
 
     def unop():
