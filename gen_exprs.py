@@ -1,15 +1,21 @@
 #!/usr/bin/python3
 
 import operator
+import sys
 from dataclasses import dataclass
 from random import choice, randint
 from typing import Callable
+
+
+def c_int_div(x: int, y: int) -> int:
+    return int(x / y)
+
 
 op_to_str = {
     operator.add: '+',
     operator.sub: '-',
     operator.mul: '*',
-    operator.floordiv: '/',
+    c_int_div: '/',
     operator.neg: '-'
 }
 
@@ -75,32 +81,34 @@ def gen_expr(depth: int) -> Expr:
     if depth == 0:
         # use small numbers to (hopefully) avoid overflow
         # TODO: figure out how to intelligently avoid overflow?
-        return Int(randint(1, 10))
+        return ParenExpr(Int(randint(1, 10)))
 
-    kind = choice([BinExpr, UnExpr, ParenExpr])
+    kind = choice([BinExpr, UnExpr])
 
     if kind == BinExpr:
         # don't produce division expressions since different languages
         # round differently
-        op = choice([operator.add, operator.sub, operator.mul])
+        op = choice([operator.add, operator.sub, operator.mul, c_int_div])
         lhs = gen_expr(depth-1)
         rhs = gen_expr(depth-1)
-        return BinExpr(op, lhs, rhs)
+        # prevent divide-by-zero
+        if op is c_int_div:
+            while rhs.eval() == 0:
+                rhs = gen_expr(depth-1)
+        # TODO: prevent overflow
+        return ParenExpr(BinExpr(op, lhs, rhs))
 
     elif kind == UnExpr:
         op = operator.neg
-        operand = gen_expr(depth-1)
-        return UnExpr(op, operand)
-
-    elif kind == ParenExpr:
-        inner = gen_expr(depth-1)
-        return ParenExpr(inner)
+        operand = ParenExpr(gen_expr(depth-1))
+        return ParenExpr(UnExpr(op, operand))
 
     assert False and "chose a type not checked for"
 
 
 def main():
-    for _ in range(100000):
+    n = int(sys.argv[1])
+    for _ in range(n):
         print(gen_expr(5))
 
 
