@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import filecmp
 import os
 import subprocess
