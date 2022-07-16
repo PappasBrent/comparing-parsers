@@ -30,7 +30,8 @@ def main():
         subprocess.run(inter.build_script, shell=True, capture_output=True)
         os.chdir('..')
 
-    ifns = ['inputs/100k.txt']
+    ifns = [os.path.join('inputs/', ifn)
+            for ifn in os.listdir('inputs/')]
 
     # run the programs
     for ifn in ifns:
@@ -53,7 +54,7 @@ def main():
     results = os.listdir('results')
     os.chdir('results')
     for r1 in results:
-        for r2 in results:
+        for r2 in [r for r in results if r != r1]:
             if not filecmp.cmp(r1, r2):
                 print(r1, r2)
 
