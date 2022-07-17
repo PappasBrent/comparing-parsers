@@ -39,7 +39,12 @@ instance Monad (Parser a) where
 chainl :: Parser a b -> Parser a (b -> b -> b) -> Parser a b
 p `chainl` op = p >>= rst
   where
-    rst a = ((op <*> pure a <*> p) >>= rst) <|> return a
+    rst a =
+      do
+        f <- op
+        b <- p
+        rst $! f a b
+        <|> return a
 
 eof :: Parser a ()
 eof = Parser $ \s -> case s of
@@ -60,30 +65,30 @@ digit = satisfy isDigit
 integer :: Parser Char Integer
 integer = read <$> some digit
 
-spaces :: Parser Char [Char]
-spaces = many $ satisfy isSpace
+removeWs :: [Char] -> [Char]
+removeWs = filter (/= ' ')
 
 between :: Eq a => Parser a a -> Parser a a -> Parser a b -> Parser a b
 between b e p = b *> p <* e
 
 parens :: Parser Char b -> Parser Char b
-parens = between (spaces *> char '(') (spaces *> char ')')
+parens = between (char '(') (char ')')
 
 addsub, muldiv :: Parser Char (Integer -> Integer -> Integer)
-addsub = spaces *> (((+) <$ char '+') <|> ((-) <$ char '-'))
-muldiv = spaces *> (((*) <$ char '*') <|> (quot <$ char '/'))
+addsub = ((+) <$ char '+') <|> ((-) <$ char '-')
+muldiv = ((*) <$ char '*') <|> (quot <$ char '/')
 
 neg :: Parser Char (Integer -> Integer)
-neg = spaces *> fmap (*) (product <$> many (spaces *> (char '-' $> (-1))))
+neg = fmap (*) (product <$> many (char '-' $> (-1)))
 
 parenint :: Parser Char Integer
-parenint = spaces *> (parens expr <|> integer) <* spaces
+parenint = parens expr <|> integer
 
 expr :: Parser Char Integer
 expr = (neg <*> parenint) `chainl` muldiv `chainl` addsub
 
 arith :: Parser Char Integer
-arith = spaces *> expr <* spaces <* eof
+arith = expr <* eof
 
 main :: IO ()
 main = do
@@ -92,6 +97,6 @@ main = do
     then exitSuccess
     else do
       line <- getLine
-      case runParser arith line of
+      case runParser arith (removeWs line) of
         Nothing -> putStrLn "Bad parse" >> main
         Just (n, rst) -> print n >> main
