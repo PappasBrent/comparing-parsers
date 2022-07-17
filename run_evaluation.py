@@ -16,6 +16,7 @@ class Program:
 
 INTERPRETERS = [
     Program('c', 'make', './main'),
+    Program('c++', 'make', './main'),
     Program('go', '', 'go run main.go'),
     Program('haskell', 'make', './main'),
     Program('python', '', 'python3 main.py'),
