@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Generator, Optional, Union
+from typing import Generator, List, Union
 
 
 class TokenType(Enum):
@@ -21,22 +21,22 @@ class Token:
 
 
 def lex(s: str) -> Generator[Token, None, None]:
-
-    char_to_type = {
-        '+': TokenType.ADD,
-        '-': TokenType.SUB,
-        '*': TokenType.MUL,
-        '/': TokenType.DIV,
-        '(': TokenType.LPAREN,
-        ')': TokenType.RPAREN,
-    }
-
     i = 0
     while i < len(s):
         if s[i].isspace():
             pass
-        elif s[i] in char_to_type.keys():
-            yield Token(char_to_type[s[i]], s[i])
+        elif s[i] == '+':
+            yield Token(TokenType.ADD, '+')
+        elif s[i] == '-':
+            yield Token(TokenType.SUB, '-')
+        elif s[i] == '*':
+            yield Token(TokenType.MUL, '*')
+        elif s[i] == '/':
+            yield Token(TokenType.DIV, '/')
+        elif s[i] == '(':
+            yield Token(TokenType.LPAREN, '(')
+        elif s[i] == ')':
+            yield Token(TokenType.RPAREN, ')')
         elif s[i].isdigit():
             n = int(s[i])
             while i+1 < len(s) and s[i+1].isdigit():
@@ -50,83 +50,88 @@ def lex(s: str) -> Generator[Token, None, None]:
         i += 1  # advance to next char
 
 
-def interpret(toks: Generator[Token, None, None]) -> int:
+class Parser:
+    def __init__(self) -> None:
+        self.i = -1
+        self.toks = []
 
-    cur, next_ = None, None
+    def set_toks(self, toks: List[Token]) -> None:
+        self.toks = toks
 
-    def advance():
-        nonlocal cur, next_
-        cur = next_
-        next_ = next(toks, None)
+    def reset(self):
+        self.i = -1
+        self.toks = []
 
-    def accept(ty: Optional[TokenType]):
-        nonlocal cur, next_
-        if next_ is None and ty is None:
-            return True
-        elif next_ is not None and next_.ty == ty:
-            advance()
+    def advance(self):
+        self.i += 1
+
+    def accept(self, ty: TokenType) -> bool:
+        if self.i+1 < len(self.toks) and self.toks[self.i+1].ty == ty:
+            self.advance()
             return True
         return False
 
-    def expect(ty: Optional[TokenType]):
-        nonlocal cur, next_
-        if not accept(ty):
+    def expect(self, ty: TokenType):
+        if not self.accept(ty):
+            if self.i < len(self.toks):
+                raise SyntaxError(
+                    f'expected token type {ty}, got {self.toks[self.i+1].ty}')
+            else:
+                raise SyntaxError(f'expected token type {ty}, got end')
+
+    def expect_end(self):
+        if self.i+1 < len(self.toks):
             raise SyntaxError(
-                f'expected {ty}, got {next_.ty if next_ is not None else next_}')
-        return True
+                f'expected end of token stream, instead at index {self.i} of {len(self.toks)}')
 
-    def interpret():
-        n = addop()
-        expect(None)
+    def parse(self) -> int:
+        n = self.addsub()
+        self.expect_end()
         return n
 
-    def addop():
-        nonlocal cur, next_
-        n = mulop()
-        while accept(TokenType.ADD) or accept(TokenType.SUB):
-            if TokenType.ADD == cur.ty:
-                n += mulop()
-            elif TokenType.SUB == cur.ty:
-                n -= mulop()
+    def addsub(self) -> int:
+        n = self.muldiv()
+        while self.accept(TokenType.ADD) or self.accept(TokenType.SUB):
+            if TokenType.ADD == self.toks[self.i].ty:
+                n += self.muldiv()
+            elif TokenType.SUB == self.toks[self.i].ty:
+                n -= self.muldiv()
         return n
 
-    def mulop():
-        nonlocal cur, next_
-        n = unop()
-        while accept(TokenType.MUL) or accept(TokenType.DIV):
-            if TokenType.MUL == cur.ty:
-                n *= unop()
-            elif TokenType.DIV == cur.ty:
+    def muldiv(self) -> int:
+        n = self.neg()
+        while self.accept(TokenType.MUL) or self.accept(TokenType.DIV):
+            if TokenType.MUL == self.toks[self.i].ty:
+                n *= self.neg()
+            elif TokenType.DIV == self.toks[self.i].ty:
                 # divide in this way to round to zero,
                 # python's // operator rounds to negative infinity
-                n = int(n / unop())
+                n = int(n / self.neg())
         return n
 
-    def unop():
+    def neg(self) -> int:
         parity = 1
-        while accept(TokenType.SUB):
+        while self.accept(TokenType.SUB):
             parity *= -1
-        n = term()
+        n = self.parenint()
         return parity * n
 
-    def term():
-        nonlocal cur, next_
-        if accept(TokenType.LPAREN):
-            n = addop()
-            expect(TokenType.RPAREN)
+    def parenint(self) -> int:
+        if self.accept(TokenType.LPAREN):
+            n = self.addsub()
+            self.expect(TokenType.RPAREN)
             return n
-        else:
-            expect(TokenType.INT)
-            return cur.val
-
-    advance()  # prime cur and next_
-    return interpret()
+        self.expect(TokenType.INT)
+        return self.toks[self.i].val
 
 
 def main():
+    parser = Parser()
     for line in sys.stdin.readlines():
+        parser.reset()
         try:
-            print(interpret(lex(line)))
+            parser.set_toks(list(lex(line)))
+            print(parser.parse())
         except SyntaxError as e:
             print(f'error: {e}')
             return 1
