@@ -3,6 +3,7 @@
 {-# HLINT ignore "Use lambda-case" #-}
 import Control.Applicative (Alternative (empty, many, some, (<|>)))
 import Data.Char (isDigit, isSpace)
+import Data.Functor (($>))
 import System.Exit (exitSuccess)
 import System.IO (isEOF)
 
@@ -35,15 +36,10 @@ instance Monad (Parser a) where
     Nothing -> Nothing
     Just (a, s') -> runParser (atopb a) s'
 
-chainl1 :: Parser a b -> Parser a (b -> b -> b) -> Parser a b
-p `chainl1` op = p >>= rst
+chainl :: Parser a b -> Parser a (b -> b -> b) -> Parser a b
+p `chainl` op = p >>= rst
   where
     rst a = ((op <*> pure a <*> p) >>= rst) <|> return a
-
-chainr1 :: Parser a b -> Parser a (b -> b -> b) -> Parser a b
-p `chainr1` op = p >>= rst
-  where
-    rst a = ((op <*> p <*> pure a) >>= rst) <|> return a
 
 eof :: Parser a ()
 eof = Parser $ \s -> case s of
@@ -64,30 +60,30 @@ digit = satisfy isDigit
 integer :: Parser Char Integer
 integer = read <$> some digit
 
-spaces :: Parser Char String
+spaces :: Parser Char [Char]
 spaces = many $ satisfy isSpace
 
-between :: Eq a => a -> a -> Parser a b -> Parser a b
-between b e p = satisfy (== b) *> p <* satisfy (== e)
+between :: Eq a => Parser a a -> Parser a a -> Parser a b -> Parser a b
+between b e p = b *> p <* e
 
-parens :: Parser Char a -> Parser Char a
-parens = between '(' ')'
+parens :: Parser Char b -> Parser Char b
+parens = between (spaces *> char '(') (spaces *> char ')')
 
 addsub, muldiv :: Parser Char (Integer -> Integer -> Integer)
 addsub = spaces *> (((+) <$ char '+') <|> ((-) <$ char '-'))
 muldiv = spaces *> (((*) <$ char '*') <|> (quot <$ char '/'))
 
-unop :: Parser Char Integer
-unop = product <$> many (spaces *> (char '-' >> pure (-1)))
+neg :: Parser Char (Integer -> Integer)
+neg = spaces *> fmap (*) (product <$> many (spaces *> (char '-' $> (-1))))
+
+parenint :: Parser Char Integer
+parenint = spaces *> (parens expr <|> integer) <* spaces
 
 expr :: Parser Char Integer
-expr = spaces *> ((*) <$> unop <*> factor) `chainl1` muldiv `chainl1` addsub
+expr = (neg <*> parenint) `chainl` muldiv `chainl` addsub
 
-factor :: Parser Char Integer
-factor = spaces *> (parens expr <|> integer)
-
-interpret :: Parser Char Integer
-interpret = expr <* spaces <* eof
+arith :: Parser Char Integer
+arith = spaces *> expr <* spaces <* eof
 
 main :: IO ()
 main = do
@@ -96,6 +92,6 @@ main = do
     then exitSuccess
     else do
       line <- getLine
-      case runParser interpret line of
+      case runParser arith line of
         Nothing -> putStrLn "Bad parse" >> main
         Just (n, rst) -> print n >> main
