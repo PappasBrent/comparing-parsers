@@ -1,4 +1,4 @@
-use std::{io::stdin, str::Chars};
+use std::io::stdin;
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 enum Token {
@@ -8,167 +8,133 @@ enum Token {
     Div,
     LParen,
     RParen,
-    Int(u32),
+    Int(i32),
 }
 
-#[derive(Debug)]
-struct Lexer<'a> {
-    input: Chars<'a>,
-    cur: Option<char>,
-    next: Option<char>,
-}
-
-impl<'a> Lexer<'a> {
-    fn new(input: &'a String) -> Self {
-        let mut lexer = Self {
-            input: input.chars(),
-            cur: None,
-            next: None,
-        };
-        //advance twice to 'prime' the lexer
-        lexer.advance();
-        lexer.advance();
-
-        lexer
-    }
-
-    fn advance(&mut self) {
-        self.cur = self.next;
-        self.next = self.input.next();
-    }
-}
-
-// TODO: implement Peekable for Lexer?
-impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        // skip whitespace
-        while let Some(c) = self.cur {
-            if c.is_whitespace() {
-                self.advance()
-            } else {
-                break;
-            }
-        }
-        // match token
-        if let Some(c) = self.cur {
-            let result = match c {
-                '+' => Some(Token::Add),
-                '-' => Some(Token::Sub),
-                '*' => Some(Token::Mul),
-                '/' => Some(Token::Div),
-                '(' => Some(Token::LParen),
-                ')' => Some(Token::RParen),
-                d if d.is_ascii_digit() => {
-                    let mut n = d.to_digit(10).unwrap();
-                    while let Some(d) = self.next {
-                        if d.is_ascii_digit() {
-                            n *= 10;
-                            n += d.to_digit(10).unwrap();
-                            self.advance();
-                        } else {
-                            break;
-                        }
-                    }
-                    Some(Token::Int(n))
+fn lex(s: &str) -> Vec<Token> {
+    let mut i = 0;
+    let mut result = vec![];
+    while i < s.len() {
+        let c = s.as_bytes()[i] as char;
+        match c {
+            ws if ws.is_whitespace() => {}
+            '+' => result.push(Token::Add),
+            '-' => result.push(Token::Sub),
+            '*' => result.push(Token::Mul),
+            '/' => result.push(Token::Div),
+            '(' => result.push(Token::LParen),
+            ')' => result.push(Token::RParen),
+            d if d.is_digit(10) => {
+                let mut n = d.to_string().parse::<i32>().unwrap();
+                while i + 1 < s.len() && (s.as_bytes()[i + 1] as char).is_digit(10) {
+                    n *= 10;
+                    n += (s.as_bytes()[i + 1] as char)
+                        .to_string()
+                        .parse::<i32>()
+                        .unwrap();
+                    i += 1;
                 }
-                _ => panic!("unexpected character: {}", c),
-            };
-            self.advance();
-            result
-        } else {
-            None
+                result.push(Token::Int(n))
+            }
+            _ => panic!("unexpected char: {}", c),
         }
+        i += 1;
     }
+    result
 }
 
-struct Interpeter<'a> {
-    toks: &'a mut dyn Iterator<Item = Token>,
-    cur: Option<Token>,
-    next: Option<Token>,
+struct Parser<'a> {
+    i: i32,
+    toks: &'a [Token],
 }
 
-impl<'a> Interpeter<'a> {
-    fn new(toks: &'a mut dyn Iterator<Item = Token>) -> Self {
-        let mut res = Self {
-            toks,
-            cur: None,
-            next: None,
-        };
-        res.advance();
-        res
+impl<'a> Parser<'a> {
+    fn new() -> Self {
+        Parser { i: -1, toks: &[] }
+    }
+
+    fn reset(&mut self) {
+        self.i = -1;
+        self.toks = &[]
     }
 
     fn advance(&mut self) {
-        self.cur = self.next;
-        self.next = self.toks.next();
+        self.i += 1;
     }
 
-    fn accept(&mut self, ot: Option<Token>) -> bool {
+    fn accept(&mut self, t: Token) -> bool {
         // accept the next token if it's the given variant
-        match (self.next, ot) {
-            (Some(nt), Some(t)) if std::mem::discriminant(&nt) == std::mem::discriminant(&t) => {
-                self.advance();
-                true
-            }
-            (None, None) => true,
-            _ => false,
+        if self.i + 1 < self.toks.len() as i32
+            && std::mem::discriminant(&self.toks[(self.i + 1) as usize])
+                == std::mem::discriminant(&t)
+        {
+            self.advance();
+            true
+        } else {
+            false
         }
     }
 
-    fn expect(&mut self, t: Option<Token>) -> Result<(), String> {
+    fn expect(&mut self, t: Token) -> Result<(), String> {
         if !self.accept(t) {
-            Err(format!("Expected {:#?}", t))
+            Err(format!("expected {:#?}", t))
         } else {
             Ok(())
         }
     }
 
-    pub fn interpret(&mut self) -> Result<i32, String> {
-        let n = self.addop()?;
-        self.expect(None)?;
+    fn expect_end(&self) -> Result<(), String> {
+        if (self.i + 1) < (self.toks.len() as i32) {
+            Err(format!("expected end"))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<i32, String> {
+        let n = self.addsub()?;
+        self.expect_end()?;
         Ok(n)
     }
 
-    fn addop(&mut self) -> Result<i32, String> {
-        let mut n = self.mulop()?;
-        while self.accept(Some(Token::Add)) || self.accept(Some(Token::Sub)) {
-            if self.cur.unwrap() == Token::Add {
-                n += self.mulop()?;
-            } else if self.cur.unwrap() == Token::Sub {
-                n -= self.mulop()?;
+    fn addsub(&mut self) -> Result<i32, String> {
+        let mut n = self.muldiv()?;
+        while self.accept(Token::Add) || self.accept(Token::Sub) {
+            if self.toks[self.i as usize] == Token::Add {
+                n += self.muldiv()?;
+            } else if self.toks[self.i as usize] == Token::Sub {
+                n -= self.muldiv()?;
             }
         }
         Ok(n)
     }
-    fn mulop(&mut self) -> Result<i32, String> {
-        let mut n = self.unop()?;
-        while self.accept(Some(Token::Mul)) || self.accept(Some(Token::Div)) {
-            if self.cur.unwrap() == Token::Mul {
-                n *= self.unop()?;
-            } else if self.cur.unwrap() == Token::Div {
-                n /= self.unop()?;
+    fn muldiv(&mut self) -> Result<i32, String> {
+        let mut n = self.neg()?;
+        while self.accept(Token::Mul) || self.accept(Token::Div) {
+            if self.toks[self.i as usize] == Token::Mul {
+                n *= self.neg()?;
+            } else if self.toks[self.i as usize] == Token::Div {
+                n /= self.neg()?;
             }
         }
         Ok(n)
     }
-    fn unop(&mut self) -> Result<i32, String> {
+    fn neg(&mut self) -> Result<i32, String> {
         let mut parity = 1;
-        while self.accept(Some(Token::Sub)) {
+        while self.accept(Token::Sub) {
             parity *= -1;
         }
-        let n = self.term()?;
+        let n = self.parenint()?;
         Ok(n * parity)
     }
-    fn term(&mut self) -> Result<i32, String> {
-        if self.accept(Some(Token::LParen)) {
-            let n = self.addop()?;
-            self.expect(Some(Token::RParen))?;
+    fn parenint(&mut self) -> Result<i32, String> {
+        if self.accept(Token::LParen) {
+            let n = self.addsub()?;
+            self.expect(Token::RParen)?;
             Ok(n)
         } else {
-            self.expect(Some(Token::Int(0)))?;
-            match self.cur.unwrap() {
+            self.expect(Token::Int(0))?;
+            match self.toks[self.i as usize] {
                 Token::Int(n) => Ok(n as i32),
                 _ => Err("Expected an int".to_owned()),
             }
@@ -183,9 +149,10 @@ pub fn main() -> Result<(), String> {
         if n == 0 {
             break;
         }
-        let mut lexer = Lexer::new(&input);
-        let mut interpeter = Interpeter::new(&mut lexer);
-        let res = interpeter.interpret()?;
+        let toks = lex(input.as_str());
+        let mut p = Parser::new();
+        p.toks = toks.as_slice();
+        let res = p.parse()?;
         println!("{}", res);
         input.clear();
     }
