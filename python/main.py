@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Generator, List, Union
+from typing import List, Union
 
 
 class TokenType(Enum):
@@ -20,34 +20,36 @@ class Token:
     val: Union[str, int]
 
 
-def lex(s: str) -> Generator[Token, None, None]:
+def lex(s: str) -> List[Token]:
     i = 0
+    toks = []
     while i < len(s):
         if s[i].isspace():
             pass
         elif s[i] == '+':
-            yield Token(TokenType.ADD, '+')
+            toks.append(Token(TokenType.ADD, '+'))
         elif s[i] == '-':
-            yield Token(TokenType.SUB, '-')
+            toks.append(Token(TokenType.SUB, '-'))
         elif s[i] == '*':
-            yield Token(TokenType.MUL, '*')
+            toks.append(Token(TokenType.MUL, '*'))
         elif s[i] == '/':
-            yield Token(TokenType.DIV, '/')
+            toks.append(Token(TokenType.DIV, '/'))
         elif s[i] == '(':
-            yield Token(TokenType.LPAREN, '(')
+            toks.append(Token(TokenType.LPAREN, '('))
         elif s[i] == ')':
-            yield Token(TokenType.RPAREN, ')')
+            toks.append(Token(TokenType.RPAREN, ')'))
         elif s[i].isdigit():
             n = int(s[i])
             while i+1 < len(s) and s[i+1].isdigit():
                 n *= 10
                 n += int(s[i+1])
                 i += 1
-            yield Token(TokenType.INT, n)
+            toks.append(Token(TokenType.INT, n))
         else:
             raise SyntaxError(f'unexpected character: {s[i]}')
 
         i += 1  # advance to next char
+    return toks
 
 
 class Parser:
@@ -129,12 +131,8 @@ def main():
     parser = Parser()
     for line in sys.stdin.readlines():
         parser.reset()
-        try:
-            parser.set_toks(list(lex(line)))
-            print(parser.parse())
-        except SyntaxError as e:
-            print(f'error: {e}')
-            return 1
+        parser.set_toks(lex(line))
+        print(parser.parse())
 
 
 if __name__ == '__main__':
