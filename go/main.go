@@ -28,156 +28,114 @@ type Token struct {
 	Val int
 }
 
-type Lexer struct {
-	i     int
-	input []rune
-	cur   rune
-	next  rune
-}
+func Lex(s string) ([]Token, error) {
 
-func NewLexer(input []rune) *Lexer {
-	l := Lexer{i: 0, input: input, cur: 0, next: 0}
+	result := make([]Token, 0)
 
-	// prime the lexer
-	l.advance()
-	l.advance()
-	return &l
-}
-
-func (l *Lexer) advance() {
-	l.cur = l.next
-	if l.i < len(l.input) {
-		l.next = l.input[l.i]
-		l.i++
-	} else {
-		l.next = 0
-	}
-}
-
-func (l *Lexer) Lex() ([]*Token, error) {
-
-	result := make([]*Token, 0)
-
-	for l.cur != 0 {
+	i := 0
+	for i < len(s) {
 		var Ty TokenType
 		var Val int
 
-		if unicode.IsSpace(l.cur) {
-			l.advance()
+		if unicode.IsSpace(rune(s[i])) {
+			i++
 			continue
-		} else if l.cur == '+' {
+		} else if s[i] == '+' {
 			Ty = Add
-		} else if l.cur == '-' {
+		} else if s[i] == '-' {
 			Ty = Sub
-		} else if l.cur == '*' {
+		} else if s[i] == '*' {
 			Ty = Mul
-		} else if l.cur == '/' {
+		} else if s[i] == '/' {
 			Ty = Div
-		} else if l.cur == '(' {
+		} else if s[i] == '(' {
 			Ty = LParen
-		} else if l.cur == ')' {
+		} else if s[i] == ')' {
 			Ty = RParen
-		} else if unicode.IsNumber(l.cur) {
+		} else if unicode.IsNumber(rune(s[i])) {
 			Ty = Int
-			n, err := strconv.Atoi(string(l.cur))
+			n, err := strconv.Atoi(string(s[i]))
 			if err != nil {
 				return nil, err
 			}
-			for unicode.IsNumber(l.next) {
+			for i+1 < len(s) && unicode.IsNumber(rune(s[i+1])) {
 				n *= 10
-				m, err := strconv.Atoi(string(l.next))
-				if err != nil {
-					return nil, err
-				}
+				m, _ := strconv.Atoi(string(s[i+1]))
 				n += m
-				l.advance()
+				i += 1
 			}
 			Val = n
 		} else {
-			return nil, fmt.Errorf("unexpected token: %c", l.cur)
+			return nil, fmt.Errorf("unexpected char: %c", s[i])
 		}
 
-		result = append(result, &Token{Ty, Val})
-		l.advance()
+		result = append(result, Token{Ty, Val})
+		i++
 	}
 	return result, nil
 }
 
-type Interpreter struct {
+type Parser struct {
 	i      int
-	tokens []*Token
-	cur    *Token
-	next   *Token
+	tokens []Token
 }
 
-func NewInterpreter(tokens []*Token) *Interpreter {
-	inter := Interpreter{tokens: tokens, cur: nil, next: nil}
-	// prime the interpreter
-	inter.advance()
-	return &inter
+func (p *Parser) Reset() {
+	p.i = -1
+	p.tokens = make([]Token, 0)
 }
 
-func (inter *Interpreter) advance() {
-	inter.cur = inter.next
-	if inter.tokens != nil && inter.i < len(inter.tokens) {
-		inter.next = (inter.tokens)[inter.i]
-		inter.i++
-	} else {
-		inter.next = nil
-	}
-}
+func (p *Parser) SetTokens(tokens []Token) { p.tokens = tokens }
 
-func (inter *Interpreter) accept(ty TokenType) bool {
-	if inter.next != nil && inter.next.Ty == ty {
-		inter.advance()
+func (p *Parser) advance() { p.i++ }
+
+func (p *Parser) accept(ty TokenType) bool {
+	if p.i+1 < len(p.tokens) && p.tokens[p.i+1].Ty == ty {
+		p.advance()
 		return true
 	}
 	return false
 }
 
-func (inter *Interpreter) expect(ty TokenType) error {
-	if inter.next == nil {
-		return fmt.Errorf("expected token %d, got none", ty)
-	} else if inter.next.Ty != ty {
-		return fmt.Errorf("expected token %d, got %d", ty, inter.next.Ty)
-	} else {
-		inter.advance()
-		return nil
-	}
-}
-
-func (inter *Interpreter) expectEnd() error {
-	if inter.next != nil {
-		return fmt.Errorf("expected end, got %d", inter.next.Ty)
+func (p *Parser) expect(ty TokenType) error {
+	if !p.accept(ty) {
+		return fmt.Errorf("expected token %q", ty)
 	}
 	return nil
 }
 
-func (inter *Interpreter) interpret() (int, error) {
-	n, err := inter.addop()
+func (p *Parser) expectEnd() error {
+	if p.i+1 < len(p.tokens) {
+		return fmt.Errorf("expected end of token stream")
+	}
+	return nil
+}
+
+func (p *Parser) parse() (int, error) {
+	n, err := p.addsub()
 	if err != nil {
 		return 0, err
 	}
-	if err = inter.expectEnd(); err != nil {
+	if err = p.expectEnd(); err != nil {
 		return 0, err
 	}
 	return n, nil
 }
 
-func (inter *Interpreter) addop() (int, error) {
-	n, err := inter.mulop()
+func (p *Parser) addsub() (int, error) {
+	n, err := p.muldiv()
 	if err != nil {
 		return 0, err
 	}
-	for inter.accept(Add) || inter.accept(Sub) {
-		if inter.cur.Ty == Add {
-			if m, err := inter.mulop(); err == nil {
+	for p.accept(Add) || p.accept(Sub) {
+		if p.tokens[p.i].Ty == Add {
+			if m, err := p.muldiv(); err == nil {
 				n += m
 			} else {
 				return 0, err
 			}
-		} else if inter.cur.Ty == Sub {
-			if m, err := inter.mulop(); err == nil {
+		} else if p.tokens[p.i].Ty == Sub {
+			if m, err := p.muldiv(); err == nil {
 				n -= m
 			} else {
 				return 0, err
@@ -187,20 +145,20 @@ func (inter *Interpreter) addop() (int, error) {
 	return n, nil
 }
 
-func (inter *Interpreter) mulop() (int, error) {
-	n, err := inter.unop()
+func (p *Parser) muldiv() (int, error) {
+	n, err := p.neg()
 	if err != nil {
 		return 0, err
 	}
-	for inter.accept(Mul) || inter.accept(Div) {
-		if inter.cur.Ty == Mul {
-			if m, err := inter.unop(); err == nil {
+	for p.accept(Mul) || p.accept(Div) {
+		if p.tokens[p.i].Ty == Mul {
+			if m, err := p.neg(); err == nil {
 				n *= m
 			} else {
 				return 0, err
 			}
-		} else if inter.cur.Ty == Div {
-			if m, err := inter.unop(); err == nil {
+		} else if p.tokens[p.i].Ty == Div {
+			if m, err := p.neg(); err == nil {
 				n /= m
 			} else {
 				return 0, err
@@ -210,46 +168,47 @@ func (inter *Interpreter) mulop() (int, error) {
 	return n, nil
 }
 
-func (inter *Interpreter) unop() (int, error) {
+func (p *Parser) neg() (int, error) {
 	parity := 1
-	for inter.accept(Sub) {
+	for p.accept(Sub) {
 		parity *= -1
 	}
-	n, err := inter.term()
+	n, err := p.parenint()
 	if err != nil {
 		return 0, err
 	}
 	return parity * n, nil
 }
 
-func (inter *Interpreter) term() (int, error) {
-	if inter.accept(LParen) {
-		n, err := inter.addop()
+func (p *Parser) parenint() (int, error) {
+	if p.accept(LParen) {
+		n, err := p.addsub()
 		if err != nil {
 			return 0, err
 		}
-		if err := inter.expect(RParen); err != nil {
+		if err := p.expect(RParen); err != nil {
 			return 0, err
 		}
 		return n, nil
 	} else {
-		if err := inter.expect(Int); err != nil {
+		if err := p.expect(Int); err != nil {
 			return 0, err
 		}
-		return inter.cur.Val, nil
+		return p.tokens[p.i].Val, nil
 	}
 }
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+	p := Parser{i: 0, tokens: make([]Token, 0)}
 	for scanner.Scan() {
-		l := NewLexer([]rune(scanner.Text()))
-		toks, err := l.Lex()
+		p.Reset()
+		tokens, err := Lex(scanner.Text())
 		if err != nil {
 			log.Fatalln(err)
 		}
-		inter := NewInterpreter(toks)
-		n, err := inter.interpret()
+		p.SetTokens(tokens)
+		n, err := p.parse()
 		if err != nil {
 			log.Fatalln(err)
 		}
