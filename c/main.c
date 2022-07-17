@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 enum Constants
 {
@@ -29,100 +30,37 @@ struct Token
     int val;
 };
 
-struct Token *newSymToken(enum TokenType ty)
-{
-    struct Token *t = malloc(sizeof(struct Token));
-    assert(t != NULL && "sym token allocation failed");
-
-    t->ty = ty;
-    t->val = 0;
-    return t;
-}
-
-struct Token *newIntToken(int val)
-{
-    struct Token *t = malloc(sizeof(struct Token));
-    assert(t != NULL && "int token allocation failed");
-
-    t->ty = INT;
-    t->val = val;
-    return t;
-}
-
-struct Lexer
-{
-    char *input;
-    char cur;
-    char next;
-};
-
-// advances the lexer's input, consuming it in the process
-int lexer_advance(struct Lexer *lexer)
-{
-    assert(lexer != NULL && "lexer is NULL\n");
-
-    if (lexer->input != NULL)
-    {
-        lexer->cur = lexer->next;
-        lexer->next = *(lexer->input++);
-        return 1;
-    }
-    return 0;
-}
-
-struct Lexer *newLexer(char *input)
-{
-    struct Lexer *lexer = malloc(sizeof(struct Lexer));
-    assert(lexer != NULL && "lexer allocation failed");
-
-    lexer->input = input;
-    lexer->cur = '\0';
-    lexer->next = '\0';
-
-    // prime the lexer
-    lexer_advance(lexer);
-    lexer_advance(lexer);
-
-    return lexer;
-}
-
 // a dynamically-sized list of tokens
 struct TokenList
 {
     size_t size;
     size_t capacity;
-    struct Token **list;
+    struct Token *list;
 };
 
 struct TokenList *newTokenList(size_t capacity)
 {
     struct TokenList *tl = malloc(sizeof(struct TokenList));
-    assert(tl != NULL && "token list allocation failed");
+    // assert(tl != NULL && "token list allocation failed");
 
     tl->size = 0;
     tl->capacity = capacity;
-    tl->list = calloc(tl->capacity, sizeof(struct Token *));
-    assert(tl->list != NULL && "token list list allocation failed");
+    tl->list = malloc(tl->capacity * sizeof(struct Token));
+    // assert(tl->list != NULL && "token list list allocation failed");
 
     return tl;
 }
 
 void freeTokenList(struct TokenList *tl)
 {
-    assert(tl != NULL && "tried to free a NULL token list");
-
-    for (size_t i = 0; i < tl->size; i++)
-    {
-        free(tl->list[i]);
-    }
-
+    // assert(tl != NULL && "tried to free a NULL token list");
     free(tl->list);
     free(tl);
 }
 
-void addToken(struct TokenList *tl, struct Token *t)
+void addToken(struct TokenList *tl, struct Token t)
 {
-    assert(tl != NULL && "tried to add to a NULL token list");
+    // assert(tl != NULL && "tried to add to a NULL token list");
 
     while (tl->size >= tl->capacity)
     {
@@ -131,7 +69,7 @@ void addToken(struct TokenList *tl, struct Token *t)
             tl->capacity = 1;
         }
         tl->capacity *= 2;
-        tl->list = realloc(tl->list, sizeof(struct Token *) * tl->capacity);
+        tl->list = realloc(tl->list, sizeof(struct Token) * tl->capacity);
     }
 
     tl->list[tl->size] = t;
@@ -143,50 +81,51 @@ int ctoi(char c)
     return c - '0';
 }
 
-struct TokenList *lex(struct Lexer *lexer)
+struct TokenList *lex(char *s)
 {
-    assert(lexer != NULL && "tried to lex with a NULL lexer");
-
+    // assert(lexer != NULL && "tried to lex with a NULL lexer");
     struct TokenList *tl = newTokenList(INIT_TOKEN_CAP);
+    int i = 0;
+    int len = strlen(s);
 
-    while (lexer->cur != '\0')
+    while (i < len)
     {
-        if (lexer->cur == '+')
+        if (s[i] == '+')
         {
-            addToken(tl, newSymToken(ADD));
+            addToken(tl, (struct Token){.ty = ADD, .val = 0});
         }
-        else if (lexer->cur == '-')
+        else if (s[i] == '-')
         {
-            addToken(tl, newSymToken(SUB));
+            addToken(tl, (struct Token){.ty = SUB, .val = 0});
         }
-        else if (lexer->cur == '*')
+        else if (s[i] == '*')
         {
-            addToken(tl, newSymToken(MUL));
+            addToken(tl, (struct Token){.ty = MUL, .val = 0});
         }
-        else if (lexer->cur == '/')
+        else if (s[i] == '/')
         {
-            addToken(tl, newSymToken(DIV));
+            addToken(tl, (struct Token){.ty = DIV, .val = 0});
         }
-        else if (lexer->cur == '(')
+        else if (s[i] == '(')
         {
-            addToken(tl, newSymToken(LPAREN));
+            addToken(tl, (struct Token){.ty = LPAREN, .val = 0});
         }
-        else if (lexer->cur == ')')
+        else if (s[i] == ')')
         {
-            addToken(tl, newSymToken(RPAREN));
+            addToken(tl, (struct Token){.ty = RPAREN, .val = 0});
         }
-        else if (isdigit(lexer->cur))
+        else if (isdigit(s[i]))
         {
-            int n = ctoi(lexer->cur);
-            while (isdigit(lexer->next))
+            int n = ctoi(s[i]);
+            while (i + 1 < len && isdigit(s[i + 1]))
             {
                 n *= 10;
-                n += ctoi(lexer->next);
-                lexer_advance(lexer);
+                n += ctoi(s[i + 1]);
+                i += 1;
             }
-            addToken(tl, newIntToken(n));
+            addToken(tl, (struct Token){.ty = INT, .val = n});
         }
-        else if (isspace(lexer->cur))
+        else if (isspace(s[i]))
         {
             // do nothing
         }
@@ -194,173 +133,142 @@ struct TokenList *lex(struct Lexer *lexer)
         {
             assert(!"unexpected token");
         }
-        lexer_advance(lexer);
+        i += 1;
     }
     return tl;
 }
 
-struct Interpreter
+struct Parser
 {
     struct TokenList *tl;
     size_t i;
-    struct Token *cur;
-    struct Token *next;
 };
 
-void interpreter_advance(struct Interpreter *inter)
+void parser_advance(struct Parser *p)
 {
-    assert(inter != NULL && "tried to advance a NULL interpreter");
-    assert(inter->tl != NULL && "interpreter token list is NULL");
-    assert(inter->tl->list != NULL && "interpreter token list list is NULL");
-
-    inter->cur = inter->next;
-    if (inter->i < inter->tl->size)
-    {
-        // advance token
-        inter->next = inter->tl->list[inter->i];
-        inter->i++;
-    }
-    else
-    {
-        // no more tokens left?
-        inter->next = NULL;
-    }
+    // assert(p != NULL && "tried to advance a NULL parser");
+    // assert(p->tl != NULL && "parser token list is NULL");
+    // assert(p->tl->list != NULL && "parser token list list is NULL");
+    p->i++;
 }
 
-int interpreter_accept(struct Interpreter *inter, enum TokenType *ty)
+int parser_accept(struct Parser *p, enum TokenType ty)
 {
-    assert(inter != NULL && "tried to accept from a NULL interpreter");
+    // assert(p != NULL && "tried to accept from a NULL parser");
 
-    if (inter->next == NULL && ty == NULL)
+    if ((p->i + 1 < p->tl->size) &&
+        (p->tl->list[p->i + 1].ty == ty))
     {
-        // are we checking that we've reached the end of the input?
-        return 1;
-    }
-    else if (inter->next && ty && inter->next->ty == *ty)
-    {
-        // are we checking that the next token has the expected type?
-        interpreter_advance(inter);
+        parser_advance(p);
         return 1;
     }
     return 0;
 }
 
-void interpreter_expect(struct Interpreter *inter, enum TokenType *ty)
+void parser_expect_end(struct Parser *p)
 {
-    assert(inter != NULL && "tried to expect from a NULL interpreter");
+    // assert(p != NULL && "tried to expect end from a NULL parser");
+    assert(p->i + 1 >= p->tl->size);
+}
 
-    if (!interpreter_accept(inter, ty))
+void parser_expect(struct Parser *p, enum TokenType ty)
+{
+    // assert(p != NULL && "tried to expect from a NULL parser");
+
+    if (!parser_accept(p, ty))
     {
         assert(!"expect failed");
     }
 }
 
-struct Interpreter *newInterpreter(struct TokenList *tl)
+void resetParser(struct Parser *p)
 {
-    struct Interpreter *inter = malloc(sizeof(struct Interpreter));
-    assert(inter != NULL && "interpreter allocation failed");
-
-    inter->i = 0;
-    inter->cur = NULL;
-    inter->next = NULL;
-    inter->tl = tl;
-
-    // prime the interpreter
-    interpreter_advance(inter);
-
-    return inter;
+    p->i = -1;
+    p->tl = NULL;
 }
 
-int addop(struct Interpreter *inter);
-int factor(struct Interpreter *inter)
+int addsub(struct Parser *p);
+int parenint(struct Parser *p)
 {
-    enum TokenType expected = LPAREN;
-    if (interpreter_accept(inter, &expected))
+    if (parser_accept(p, LPAREN))
     {
-        int n = addop(inter);
-        expected = RPAREN;
-        interpreter_expect(inter, &expected);
+        int n = addsub(p);
+        parser_expect(p, RPAREN);
         return n;
     }
-    expected = INT;
-    interpreter_expect(inter, &expected);
-    return inter->cur->val;
+    parser_expect(p, INT);
+    return p->tl->list[p->i].val;
 }
 
-int unop(struct Interpreter *inter)
+int neg(struct Parser *p)
 {
     enum TokenType accepted = SUB;
     int parity = 1;
-    while (interpreter_accept(inter, &accepted))
+    while (parser_accept(p, accepted))
     {
         parity *= -1;
     }
-    return parity * factor(inter);
+    return parity * parenint(p);
 }
 
-int mulop(struct Interpreter *inter)
+int muldiv(struct Parser *p)
 {
-    enum TokenType accepted1 = MUL;
-    enum TokenType accepted2 = DIV;
-    int n = unop(inter);
-    while (interpreter_accept(inter, &accepted1) ||
-           interpreter_accept(inter, &accepted2))
+    int n = neg(p);
+    while (parser_accept(p, MUL) ||
+           parser_accept(p, DIV))
     {
-        if (inter->cur->ty == MUL)
+        if (p->tl->list[p->i].ty == MUL)
         {
-            n *= unop(inter);
+            n *= neg(p);
         }
-        else if (inter->cur->ty == DIV)
+        else if (p->tl->list[p->i].ty == DIV)
         {
-            n /= unop(inter);
+            n /= neg(p);
         }
     }
     return n;
 }
 
-int addop(struct Interpreter *inter)
+int addsub(struct Parser *p)
 {
-    enum TokenType accepted1 = ADD;
-    enum TokenType accepted2 = SUB;
-    int n = mulop(inter);
-    while (interpreter_accept(inter, &accepted1) ||
-           interpreter_accept(inter, &accepted2))
+    int n = muldiv(p);
+    while (parser_accept(p, ADD) ||
+           parser_accept(p, SUB))
     {
-        if (inter->cur->ty == ADD)
+        if (p->tl->list[p->i].ty == ADD)
         {
-            n += mulop(inter);
+            n += muldiv(p);
         }
-        else if (inter->cur->ty == SUB)
+        else if (p->tl->list[p->i].ty == SUB)
         {
-            n -= mulop(inter);
+            n -= muldiv(p);
         }
     }
     return n;
 }
 
-int interpret(struct Interpreter *inter)
+int parse(struct Parser *p)
 {
-    int n = addop(inter);
-    interpreter_expect(inter, NULL);
+    int n = addsub(p);
+    parser_expect_end(p);
     return n;
 }
 
 int main(int argc, char const *argv[])
 {
     char buffer[BUFFER_LEN] = {'\0'};
+    struct Parser p = {.i = -1, .tl = NULL};
 
     while (fgets(buffer, BUFFER_LEN, stdin))
     {
-        struct Lexer *lexer = newLexer(buffer);
-        struct TokenList *tl = lex(lexer);
-        struct Interpreter *inter = newInterpreter(tl);
+        resetParser(&p);
+        struct TokenList *tl = lex(buffer);
+        p.tl = tl;
 
-        int result = interpret(inter);
+        int result = parse(&p);
         printf("%d\n", result);
 
-        free(inter);
         freeTokenList(tl);
-        free(lexer);
 
         for (size_t i = 0; i < BUFFER_LEN; i++)
         {
