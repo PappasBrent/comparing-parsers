@@ -53,11 +53,6 @@ impl<'a> Parser<'a> {
         Parser { i: -1, toks: &[] }
     }
 
-    fn reset(&mut self) {
-        self.i = -1;
-        self.toks = &[]
-    }
-
     fn advance(&mut self) {
         self.i += 1;
     }
