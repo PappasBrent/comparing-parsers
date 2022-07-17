@@ -8,27 +8,27 @@ from datetime import datetime
 
 
 @dataclass
-class Program:
+class Parser:
     dir: str
     build_script: str
     run_script: str
 
 
-INTERPRETERS = [
-    Program('c', 'make', './main'),
-    Program('c++', 'make', './main'),
-    Program('go', '', 'go run main.go'),
-    Program('haskell', 'make', './main'),
-    Program('python', '', 'python3 main.py'),
-    Program('rust', 'cargo build', './target/debug/arith-interpreter'),
+PARSERS = [
+    Parser('c', 'make', './main'),
+    Parser('c++', 'make', './main'),
+    Parser('go', '', 'go run main.go'),
+    Parser('haskell', 'make', './main'),
+    Parser('python', '', 'python3 main.py'),
+    Parser('rust', 'cargo build', './target/debug/arith-parser'),
 ]
 
 
 def main():
-    # build the programs
-    for inter in INTERPRETERS:
-        os.chdir(inter.dir)
-        subprocess.run(inter.build_script, shell=True, capture_output=True)
+    # build the parsers
+    for p in PARSERS:
+        os.chdir(p.dir)
+        subprocess.run(p.build_script, shell=True, capture_output=True)
         os.chdir('..')
 
     ifns = [os.path.join('inputs/', ifn)
@@ -38,16 +38,16 @@ def main():
     for ifn in ifns:
         print(f'# {ifn}')
 
-        for inter in INTERPRETERS:
-            os.chdir(inter.dir)
+        for p in PARSERS:
+            os.chdir(p.dir)
 
             start = datetime.now()
             subprocess.run(
-                f'cat ../{ifn} | {inter.run_script} > ../results/{inter.dir}.txt',
+                f'cat ../{ifn} | {p.run_script} > ../results/{p.dir}.txt',
                 shell=True)
             end = datetime.now()
             elapsed = end - start
-            print(f'    {inter.dir}: {elapsed.seconds}.{elapsed.microseconds}')
+            print(f'    {p.dir}: {elapsed.seconds}.{elapsed.microseconds}')
 
             os.chdir('..')
 
