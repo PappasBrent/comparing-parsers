@@ -82,14 +82,10 @@ class Parser
 {
 private:
     int i_;
-    std::vector<Token> toks_;
+    std::vector<Token> &toks_;
 
 public:
-    Parser();
-    ~Parser(){};
-
-    void reset();
-    void setToks(std::vector<Token>);
+    Parser(std::vector<Token> &);
 
     void advance();
     bool accept(TokenType ty);
@@ -103,14 +99,7 @@ public:
     int parenint();
 };
 
-Parser::Parser() : i_(-1) {}
-
-void Parser::reset()
-{
-    i_ = -1;
-    toks_.clear();
-}
-void Parser::setToks(std::vector<Token> toks) { toks_ = toks; }
+Parser::Parser(std::vector<Token> &toks) : i_(-1), toks_(toks) {}
 
 void Parser::advance() { i_++; }
 bool Parser::accept(TokenType ty)
@@ -205,12 +194,10 @@ int Parser::parenint()
 int main(int argc, char const *argv[])
 {
     std::string line;
-    Parser p;
     while (std::getline(std::cin, line))
     {
-        p.reset();
         auto toks = lex(line);
-        p.setToks(toks);
+        Parser p(toks);
         int n = p.parse();
         std::cout << n << "\n";
     }
