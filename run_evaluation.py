@@ -17,6 +17,7 @@ class Parser:
 PARSERS = [
     Parser('c', 'make', './main'),
     Parser('c++', 'make', './main'),
+    Parser('c#', 'make', 'mono main.exe'),
     Parser('go', '', 'go run main.go'),
     Parser('haskell', 'make', './main'),
     Parser('python', '', 'python3 main.py'),
