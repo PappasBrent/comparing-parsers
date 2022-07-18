@@ -21,6 +21,7 @@ PARSERS = [
     Parser('go', '', 'go run main.go'),
     Parser('haskell', 'make', './main'),
     Parser('java', 'make', 'java Main'),
+    Parser('javascript', '', 'node main.js'),
     Parser('python', '', 'python3 main.py'),
     Parser('rust', 'cargo build', './target/debug/arith-parser'),
 ]
