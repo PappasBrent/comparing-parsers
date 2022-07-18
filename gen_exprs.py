@@ -109,7 +109,7 @@ def gen_expr(depth: int) -> Expr:
 def main():
     n = int(sys.argv[1])
     for _ in range(n):
-        print(gen_expr(5))
+        print(gen_expr(randint(1, 5)))
 
 
 if __name__ == '__main__':
