@@ -20,6 +20,7 @@ PARSERS = [
     Parser('c#', 'make', 'mono main.exe'),
     Parser('go', '', 'go run main.go'),
     Parser('haskell', 'make', './main'),
+    Parser('java', 'make', 'java Main'),
     Parser('python', '', 'python3 main.py'),
     Parser('rust', 'cargo build', './target/debug/arith-parser'),
 ]
