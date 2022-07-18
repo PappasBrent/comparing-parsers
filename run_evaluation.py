@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
 import filecmp
+import json
 import os
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import List
 
 
 @dataclass
@@ -28,6 +30,14 @@ PARSERS = [
 ]
 
 
+@dataclass
+class EvaluationResult:
+    input_file_name: str
+    parser_language: str
+    seconds: int
+    microseconds: int
+
+
 def time_parser_on_input(p: Parser, fn: str) -> timedelta:
     start = datetime.now()
     subprocess.run(
@@ -47,6 +57,9 @@ def main():
     # collect input files
     fns = [os.path.join('inputs/', fn) for fn in os.listdir('inputs/')]
 
+    # store evaluation results in a list
+    results: List[EvaluationResult] = []
+
     # for each input
     for fn in fns:
         print(f'# {fn}')
@@ -64,6 +77,9 @@ def main():
             # averaging timedeltas: https://stackoverflow.com/a/3617540/6824430
             times = [time_parser_on_input(p, fn) for _ in range(5)]
             avg = sum(times, timedelta(0)) / len(times)
+            # add result to results list
+            r = EvaluationResult(fn, p.dir, avg.seconds, avg.microseconds)
+            results.append(r)
             print(f'    {p.dir}: {avg.seconds}.{avg.microseconds}')
 
             # go back to the top-level directory
@@ -76,6 +92,10 @@ def main():
             for r2 in [r for r in results if r != r1]:
                 if not filecmp.cmp(r1, r2):
                     print(f'{r1} != {r2}')
+
+    # dump results to file
+    with open('results.json', 'w') as fp:
+        json.dump(results, fp)
 
 
 if __name__ == '__main__':
