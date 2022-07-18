@@ -4,7 +4,7 @@ import filecmp
 import json
 import os
 import subprocess
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import List
 
@@ -58,7 +58,7 @@ def main():
     fns = [os.path.join('inputs/', fn) for fn in os.listdir('inputs/')]
 
     # store evaluation results in a list
-    results: List[EvaluationResult] = []
+    evaluation_results: List[EvaluationResult] = []
 
     # for each input
     for fn in fns:
@@ -78,25 +78,26 @@ def main():
             times = [time_parser_on_input(p, fn) for _ in range(5)]
             avg = sum(times, timedelta(0)) / len(times)
             # add result to results list
-            r = EvaluationResult(fn, p.dir, avg.seconds, avg.microseconds)
-            results.append(r)
+            r = EvaluationResult(os.path.split(
+                fn)[1], p.dir, avg.seconds, avg.microseconds)
+            evaluation_results.append(r)
             print(f'    {p.dir}: {avg.seconds}.{avg.microseconds}')
 
             # go back to the top-level directory
             os.chdir('..')
 
         # check that output of all parsers is the same
-        results = os.listdir('results')
+        parser_results = os.listdir('results')
         os.chdir('results')
-        for r1 in results:
-            for r2 in [r for r in results if r != r1]:
+        for r1 in parser_results:
+            for r2 in [r for r in parser_results if r != r1]:
                 if not filecmp.cmp(r1, r2):
                     print(f'{r1} != {r2}')
         os.chdir('..')
 
     # dump results to file
     with open('results.json', 'w') as fp:
-        json.dump(results, fp)
+        json.dump([asdict(r) for r in evaluation_results], fp, indent=4)
 
 
 if __name__ == '__main__':
