@@ -24,6 +24,7 @@ PARSERS = [
     Parser('javascript', '', 'node main.js'),
     Parser('python', '', 'python3 main.py'),
     Parser('rust', 'cargo build', './target/debug/arith-parser'),
+    Parser('typescript', 'make', 'node main.js'),
 ]
 
 
