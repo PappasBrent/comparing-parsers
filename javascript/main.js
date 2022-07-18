@@ -24,7 +24,6 @@ function isNumeric(s) {
     return !isNaN(parseFloat(s)) && isFinite(s);
 }
 
-
 function lex(s) {
     let toks = [];
     let i = 0;
