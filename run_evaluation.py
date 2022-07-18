@@ -92,6 +92,7 @@ def main():
             for r2 in [r for r in results if r != r1]:
                 if not filecmp.cmp(r1, r2):
                     print(f'{r1} != {r2}')
+        os.chdir('..')
 
     # dump results to file
     with open('results.json', 'w') as fp:
