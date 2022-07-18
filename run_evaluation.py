@@ -55,13 +55,13 @@ def main():
 
             os.chdir('..')
 
-    # check that all files are the same
-    results = os.listdir('results')
-    os.chdir('results')
-    for r1 in results:
-        for r2 in [r for r in results if r != r1]:
-            if not filecmp.cmp(r1, r2):
-                print(r1, r2)
+        # check that all files are the same
+        results = os.listdir('results')
+        os.chdir('results')
+        for r1 in results:
+            for r2 in [r for r in results if r != r1]:
+                if not filecmp.cmp(r1, r2):
+                    print(r1, r2)
 
 
 if __name__ == '__main__':
