@@ -98,8 +98,6 @@ def gen_expr(depth: int) -> Expr:
 
     # if we've reached the max depth, emit an integer literal
     if depth == 0:
-        # use small numbers to (hopefully) avoid overflow
-        # TODO: intelligently avoid overflow, see below
         return ParenExpr(Int(randint(1, 10)))
 
     # otherwise, pick a rand nonterminal to emit
@@ -117,12 +115,10 @@ def gen_expr(depth: int) -> Expr:
             # keep regenerating the RHS until it doesn't equal zero
             while rhs.eval() == 0:
                 rhs = gen_expr(depth-1)
-        # TODO: prevent overflow by regenerating the RHS until
-        # it's greater than -2147483648 and less than 2147483647
         return ParenExpr(BinExpr(op, lhs, rhs))
 
     elif kind == UnExpr:
-        op = operator.neg  # generate the operator
+        op = operator.neg                       # generate the operator
         operand = ParenExpr(gen_expr(depth-1))  # generate the operand
         return ParenExpr(UnExpr(op, operand))
 
@@ -138,7 +134,11 @@ def main():
 
     n = int(sys.argv[1])
     for _ in range(n):
-        print(gen_expr(randint(1, 5)))
+        e = gen_expr(randint(1, 5))
+        # prevent integer overflow
+        while not (-2147483648 <= e.eval() <= 2147483647):
+            e = gen_expr(1, 5)
+        print(e)
 
 
 if __name__ == '__main__':
