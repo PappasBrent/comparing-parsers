@@ -17,6 +17,7 @@ class Parser:
 
 
 PARSERS = [
+    Parser('bc', '', './filter-bc.sh'),
     Parser('c', 'make', './main'),
     Parser('c++', 'make', './main'),
     Parser('c#', 'make', 'mono main.exe'),
@@ -86,13 +87,12 @@ def main():
             # go back to the top-level directory
             os.chdir('..')
 
-        # check that output of all parsers is the same
+        # check that output of all parsers is the same as that of bc
         parser_results = os.listdir('results')
         os.chdir('results')
-        for r1 in parser_results:
-            for r2 in [r for r in parser_results if r != r1]:
-                if not filecmp.cmp(r1, r2):
-                    print(f'{r1} != {r2}')
+        for r in [r for r in parser_results if r != 'bc.txt']:
+            if not filecmp.cmp('bc.txt', r):
+                print(f'{r} != bc.txt')
         os.chdir('..')
 
     # dump results to file
