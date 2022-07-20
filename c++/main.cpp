@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <assert.h>
 #include <ctype.h>
@@ -194,12 +195,28 @@ int Parser::parenint()
 int main(int argc, char const *argv[])
 {
     std::string line;
-    while (std::getline(std::cin, line))
+    // read from stdin
+    if (argc < 2)
     {
-        auto toks = lex(line);
-        Parser p(toks);
-        int n = p.parse();
-        std::cout << n << "\n";
+        while (std::getline(std::cin, line))
+        {
+            auto toks = lex(line);
+            Parser p(toks);
+            int n = p.parse();
+            std::cout << n << "\n";
+        }
+    }
+    // read from file
+    else
+    {
+        std::ifstream ifp(argv[1]);
+        while (std::getline(ifp, line))
+        {
+            auto toks = lex(line);
+            Parser p(toks);
+            int n = p.parse();
+            std::cout << n << "\n";
+        }
     }
 
     return 0;

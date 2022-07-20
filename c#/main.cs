@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 
 namespace ArithParser
@@ -153,13 +154,29 @@ namespace ArithParser
     class ArithParser {
         static void Main(string[] args) {
             Parser p = new Parser();
-            for (string s = Console.ReadLine(); s != null; s = Console.ReadLine())
-            {
-                p.reset();
-                List<Token> toks = Lexer.lex(s);
-                p.setToks(toks);
-                int n = p.parse();
-                Console.WriteLine(n);
+            // read from stdin
+            if (args.Length == 0) {
+                for (string s = Console.ReadLine(); s != null; s = Console.ReadLine())
+                {
+                    p.reset();
+                    List<Token> toks = Lexer.lex(s);
+                    p.setToks(toks);
+                    int n = p.parse();
+                    Console.WriteLine(n);
+                }
+            } else {
+                // read from a file
+                using(StreamReader file = new StreamReader(args[0])) {  
+                    string line;
+                    while ((line = file.ReadLine()) != null) {  
+                        p.reset();
+                        List<Token> toks = Lexer.lex(line);
+                        p.setToks(toks);
+                        int n = p.parse();
+                        Console.WriteLine(n);
+                    }  
+                    file.Close();  
+                } 
             }
         }
     }

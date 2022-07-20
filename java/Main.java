@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -130,7 +131,15 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         Parser p = new Parser();
-        Scanner input = new Scanner(System.in);
+        Scanner input = null;
+        // read from stdin
+        if (args.length == 0) {
+            input = new Scanner(System.in);
+        }
+        // read from file
+        else {
+            input = new Scanner(new File(args[0]));
+        }
         while (input.hasNextLine()) {
             p.reset();
             p.setToks(lex(input.nextLine()));
