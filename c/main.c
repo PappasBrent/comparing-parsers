@@ -259,7 +259,18 @@ int main(int argc, char const *argv[])
     char buffer[BUFFER_LEN] = {'\0'};
     struct Parser p = {.i = -1, .tl = NULL};
 
-    while (fgets(buffer, BUFFER_LEN, stdin))
+    FILE *fp = NULL;
+    // read from stdin
+    if (argc < 2)
+    {
+        fp = stdin;
+    }
+    // read from a file
+    else
+    {
+        fp = fopen(argv[1], "r");
+    }
+    while (fgets(buffer, BUFFER_LEN, fp))
     {
         resetParser(&p);
         struct TokenList *tl = lex(buffer);
@@ -274,6 +285,11 @@ int main(int argc, char const *argv[])
         {
             buffer[i] = '\0';
         }
+    }
+
+    if (fp != stdin)
+    {
+        fclose(fp);
     }
 
     return 0;
