@@ -17,10 +17,10 @@ class Parser:
 
 
 PARSERS = [
-    Parser('bc', '', './filter-bc.sh'),
+    Parser('bc', '', './bc.sh'),
     Parser('c', 'make', './main'),
-    Parser('c++', 'make', './main'),
     Parser('c#', 'make', 'mono main.exe'),
+    Parser('c++', 'make', './main'),
     Parser('go', '', 'go run main.go'),
     Parser('haskell', 'make', './main'),
     Parser('java', 'make', 'java Main'),
@@ -39,11 +39,13 @@ class EvaluationResult:
     microseconds: int
 
 
-def time_parser_on_input(p: Parser, fn: str) -> timedelta:
+def parse_and_print_results(p: Parser, ifp: str, ofp: str) -> timedelta:
+    '''
+    runs the parser p in the input ifp, prints the results to ofp,
+    and returns the time elapsed
+    '''
     start = datetime.now()
-    subprocess.run(
-        f'cat ../{fn} | {p.run_script} > ../results/{p.dir}.txt',
-        shell=True)
+    subprocess.run(f'{p.run_script} {ifp} >{ofp}', shell=True)
     end = datetime.now()
     return end - start
 
@@ -56,46 +58,80 @@ def main():
         os.chdir('..')
 
     # collect input files
-    fns = [os.path.join('inputs/', fn) for fn in os.listdir('inputs/')]
+    fns = [os.path.realpath(os.path.join('inputs/', fn))
+           for fn in os.listdir('inputs/')]
+
+    # clear old results
+    subprocess.run('rm -fr results', shell=True)
+    os.makedirs('results', exist_ok=True)
 
     # store evaluation results in a list
     evaluation_results: List[EvaluationResult] = []
 
     # for each input
     for fn in fns:
-        print(f'# {fn}')
+        print(f'{fn}')
 
         # for each parser
         for p in PARSERS:
-            # change into the parser's directory
+            # change to the parer's directory
             os.chdir(p.dir)
 
-            # run the parser twice to warm up the cache
-            time_parser_on_input(p, fn)
-            time_parser_on_input(p, fn)
+            # run bc only once, since it's not a part of the study and we're
+            # only using it to check the output of the other parsers
+            if p.dir == 'bc':
+                # one minor catch here: bc runs until it encounters
+                # the quit command, but my parsers run until
+                # the end of the input
+                # i see three ways around this:
+                # 1) read the input line by line, and echo each line to bc
+                # 2) change all my parsers to check for the quit command
+                # 3) append the quit command to the input, pass it to bc,
+                #    then remove the quit command
+                # (1) is slow, and I don't like (2) because that's tedious.
+                # so I opt for (3).
 
-            # run the parser 5 times, and take the average of those times
-            # averaging timedeltas: https://stackoverflow.com/a/3617540/6824430
-            times = [time_parser_on_input(p, fn) for _ in range(5)]
-            avg = sum(times, timedelta(0)) / len(times)
-            # add result to results list
-            r = EvaluationResult(os.path.split(
-                fn)[1], p.dir, avg.seconds, avg.microseconds)
-            evaluation_results.append(r)
-            print(f'    {p.dir}: {avg.seconds}.{avg.microseconds}')
+                # append the quit command to the file
+                subprocess.run(
+                    f'echo quit >> {fn}', shell=True, capture_output=True)
 
-            # go back to the top-level directory
+                # run bc on the temp file
+                parse_and_print_results(p, fn, f'../results/{p.dir}.txt')
+
+                # remove the quit command from the file
+                subprocess.run(
+                    f"sed -i -z 's/quit\\n//g' {fn}", shell=True, capture_output=True)
+
+            else:
+                # run the parser twice to warm up the cache
+                parse_and_print_results(p, fn, f'../results/{p.dir}.txt')
+                parse_and_print_results(p, fn, f'../results/{p.dir}.txt')
+
+                # run the parser 5 times, and take the average of those times
+                # averaging timedeltas: https://stackoverflow.com/a/3617540/6824430
+                times = [parse_and_print_results(p, fn, f'../results/{p.dir}.txt')
+                         for _ in range(5)]
+                avg = sum(times, timedelta(0)) / len(times)
+                # extract the input's file name
+                ifn = os.path.split(fn)[1]
+                # add result to results list
+                r = EvaluationResult(ifn, p.dir, avg.seconds, avg.microseconds)
+                evaluation_results.append(r)
+                print(f'    {p.dir}: {avg.seconds}.{avg.microseconds}')
+
+            # change back to the top-level directory
             os.chdir('..')
 
         # check that output of all parsers is the same as that of bc
-        parser_results = os.listdir('results')
-        os.chdir('results')
-        for r in [r for r in parser_results if r != 'bc.txt']:
-            if not filecmp.cmp('bc.txt', r):
-                print(f'{r} != bc.txt')
-        os.chdir('..')
+        bc_result = os.path.realpath('results/bc.txt')
+        parser_results = [os.path.realpath(os.path.join('results/', r))
+                          for r in os.listdir('results/')
+                          if r != 'bc.txt']
+        for r in parser_results:
+            if not filecmp.cmp(bc_result, r):
+                print(f'{r} != {bc_result}')
 
-    # dump results to file
+    # print results to json
     with open('results.json', 'w') as fp:
         json.dump([asdict(r) for r in evaluation_results], fp, indent=4)
 
