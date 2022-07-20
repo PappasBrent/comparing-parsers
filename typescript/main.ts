@@ -1,9 +1,6 @@
+import * as process from 'process';
+import * as fs from 'fs';
 import * as readline from 'readline';
-
-const RL = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
 
 enum TokenType {
     Add,
@@ -151,8 +148,15 @@ class Parser {
     }
 }
 
+// read from a file or stdin
+let rl = readline.createInterface({
+    input: (process.argv.length > 2) ? fs.createReadStream(process.argv[2]) : process.stdin,
+    output: process.stdout
+});
+
+
 const p = new Parser();
-RL.on('line', (line) => {
+rl.on('line', (line) => {
     p.reset();
     p.toks = lex(line);
     const n = p.parse();

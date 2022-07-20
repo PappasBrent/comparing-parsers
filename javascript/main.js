@@ -1,7 +1,6 @@
-const readline = require('readline').createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+const readline = require('readline');
+const fs = require('fs');
+const process = require('process');
 
 const TokenType = {
     Add: 0,
@@ -134,10 +133,17 @@ class Parser {
     }
 }
 
+// read from a file or stdin
+let rl = readline.createInterface({
+    input: (process.argv.length > 2) ? fs.createReadStream(process.argv[2]) : process.stdin,
+    output: process.stdout
+});
+
+
 const p = new Parser();
-readline.on('line', (line) => {
+rl.on('line', (line) => {
     p.reset();
-    p.setToks(lex(line));
+    p.toks = lex(line);
     const n = p.parse();
     console.log(n);
 });

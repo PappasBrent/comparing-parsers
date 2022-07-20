@@ -199,7 +199,18 @@ func (p *Parser) parenint() (int, error) {
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
+	// read from stdin
+	var scanner *bufio.Scanner
+	if len(os.Args) < 2 {
+		scanner = bufio.NewScanner(os.Stdin)
+		// read from a file
+	} else {
+		f, err := os.Open(os.Args[1])
+		if err != nil {
+			log.Fatalln(err)
+		}
+		scanner = bufio.NewScanner(f)
+	}
 	p := Parser{i: 0, tokens: make([]Token, 0)}
 	for scanner.Scan() {
 		p.Reset()

@@ -1,4 +1,8 @@
-use std::io::stdin;
+use std::{
+    env,
+    fs::File,
+    io::{self, stdin, BufRead},
+};
 
 #[derive(PartialEq, Eq, Debug, Clone, Copy)]
 enum Token {
@@ -139,17 +143,34 @@ impl<'a> Parser<'a> {
 
 pub fn main() -> Result<(), String> {
     let mut input = String::new();
-    while let Ok(n) = stdin().read_line(&mut input) {
-        // check for eof
-        if n == 0 {
-            break;
+    let args: Vec<String> = env::args().collect();
+    // read from stdin
+    if args.len() < 2 {
+        while let Ok(n) = stdin().read_line(&mut input) {
+            // check for eof
+            if n == 0 {
+                break;
+            }
+            let toks = lex(input.as_str());
+            let mut p = Parser::new();
+            p.toks = toks.as_slice();
+            let res = p.parse()?;
+            println!("{}", res);
+            input.clear();
         }
-        let toks = lex(input.as_str());
-        let mut p = Parser::new();
-        p.toks = toks.as_slice();
-        let res = p.parse()?;
-        println!("{}", res);
-        input.clear();
+    // read from file
+    } else {
+        let file = File::open(args[1].to_string()).unwrap();
+        let lines = io::BufReader::new(file).lines();
+        for line in lines {
+            if let Ok(line) = line {
+                let toks = lex(line.as_str());
+                let mut p = Parser::new();
+                p.toks = toks.as_slice();
+                let res = p.parse()?;
+                println!("{}", res);
+            }
+        }
     }
     Ok(())
 }

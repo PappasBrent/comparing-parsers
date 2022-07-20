@@ -4,6 +4,7 @@
 import Control.Applicative (Alternative (empty, many, some, (<|>)))
 import Data.Char (isDigit, isSpace)
 import Data.Functor (($>))
+import System.Environment (getArgs)
 import System.Exit (exitSuccess)
 import System.IO (isEOF)
 
@@ -90,13 +91,29 @@ expr = (neg <*> parenint) `chainl` muldiv `chainl` addsub
 arith :: Parser Char Integer
 arith = expr <* eof
 
-main :: IO ()
-main = do
+runParserOnLine :: String -> IO ()
+runParserOnLine line = case runParser arith (removeWs line) of
+  Nothing -> putStrLn "Bad parse"
+  Just (n, rst) -> print n
+
+readFromStdin :: IO ()
+readFromStdin = do
   end <- isEOF
   if end
     then exitSuccess
     else do
       line <- getLine
-      case runParser arith (removeWs line) of
-        Nothing -> putStrLn "Bad parse" >> main
-        Just (n, rst) -> print n >> main
+      runParserOnLine line
+      readFromStdin
+
+readFromFile :: String -> IO ()
+readFromFile fn = do
+  contents <- readFile fn
+  mapM_ runParserOnLine (lines contents)
+
+main :: IO ()
+main = do
+  args <- getArgs
+  case args of
+    [] -> readFromStdin
+    s : ss -> readFromFile s
