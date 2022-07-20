@@ -129,10 +129,20 @@ class Parser:
 
 def main():
     parser = Parser()
-    for line in sys.stdin.readlines():
-        parser.reset()
-        parser.set_toks(lex(line))
-        print(parser.parse())
+    # read from stdin
+    if len(sys.argv) < 2:
+        for line in sys.stdin.readlines():
+            parser.reset()
+            parser.set_toks(lex(line))
+            print(parser.parse())
+    # read from a file
+    else:
+        fn = sys.argv[1]
+        with open(fn) as fp:
+            for line in fp:
+                parser.reset()
+                parser.set_toks(lex(line))
+                print(parser.parse())
 
 
 if __name__ == '__main__':
