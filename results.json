@@ -1,0 +1,422 @@
+[
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 2320
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 32158
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 2988
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 150727
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "haskell",
+        "seconds": 0,
+        "microseconds": 2834
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 74272
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 364767
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "python",
+        "seconds": 0,
+        "microseconds": 41828
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 2439
+    },
+    {
+        "input_file_name": "1.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 370058
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 35720
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 98406
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 51262
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 213583
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "haskell",
+        "seconds": 0,
+        "microseconds": 160150
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 276004
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 493189
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "python",
+        "seconds": 0,
+        "microseconds": 776445
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 86109
+    },
+    {
+        "input_file_name": "10K.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 477849
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 1304
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 35201
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 3146
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 161411
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "haskell",
+        "seconds": 0,
+        "microseconds": 3191
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 90268
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 369818
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "python",
+        "seconds": 0,
+        "microseconds": 37758
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 2621
+    },
+    {
+        "input_file_name": "10.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 357404
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 4119
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 34593
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 8968
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 173401
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "haskell",
+        "seconds": 0,
+        "microseconds": 26337
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 145652
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 396346
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "python",
+        "seconds": 0,
+        "microseconds": 121874
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 14545
+    },
+    {
+        "input_file_name": "1K.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 391016
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 243259
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 680719
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 344156
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 591369
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "haskell",
+        "seconds": 1,
+        "microseconds": 349694
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 675218
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 979957
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "python",
+        "seconds": 7,
+        "microseconds": 271824
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 772784
+    },
+    {
+        "input_file_name": "100K.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 984022
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "c",
+        "seconds": 2,
+        "microseconds": 183688
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "c#",
+        "seconds": 6,
+        "microseconds": 433057
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "c++",
+        "seconds": 3,
+        "microseconds": 316476
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "go",
+        "seconds": 4,
+        "microseconds": 450610
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "haskell",
+        "seconds": 13,
+        "microseconds": 438052
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "java",
+        "seconds": 4,
+        "microseconds": 458804
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "javascript",
+        "seconds": 5,
+        "microseconds": 860092
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "python",
+        "seconds": 72,
+        "microseconds": 497577
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "rust",
+        "seconds": 7,
+        "microseconds": 596630
+    },
+    {
+        "input_file_name": "1M.txt",
+        "parser_language": "typescript",
+        "seconds": 5,
+        "microseconds": 932528
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "c",
+        "seconds": 0,
+        "microseconds": 2167
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "c#",
+        "seconds": 0,
+        "microseconds": 35879
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "c++",
+        "seconds": 0,
+        "microseconds": 3770
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "go",
+        "seconds": 0,
+        "microseconds": 163069
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "haskell",
+        "seconds": 0,
+        "microseconds": 7036
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "java",
+        "seconds": 0,
+        "microseconds": 116157
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "javascript",
+        "seconds": 0,
+        "microseconds": 377664
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "python",
+        "seconds": 0,
+        "microseconds": 52527
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "rust",
+        "seconds": 0,
+        "microseconds": 4188
+    },
+    {
+        "input_file_name": "100.txt",
+        "parser_language": "typescript",
+        "seconds": 0,
+        "microseconds": 384204
+    }
+]
