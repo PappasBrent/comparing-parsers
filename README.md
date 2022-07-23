@@ -1,27 +1,13 @@
 # Arithmetic Expression Interpreter Comparison
 In this study we implement a simple interpreter for arithmetic expressions in several programming languages, and compare their performance.
 
+Here is the accompanying blog post with the list of technologies I used:
+If you would like to replicate the study, please refer to the Hardware and Software sections of the post.
 
-<!-- TODO: Include version numbers -->
-## Languages Included in Study
-- C
-- C#
-- C++
-- Go
-- Haskell
-- Java
-- Javascript
-- Python3
-- Rust
-- Typescript
+Once you have all the necessary software installed, you can run the evaluation by running the script `run_evaluation.py`:
 
-## Concrete Grammar of Arithmetic Expressions
-Presented in extended Backus-Naur form.
-
+```bash
+    $ python3 run_evaluation.py
 ```
-addop   =   mulop {('+' | '-') mulop};
-mulop   =   unop {('*' | '/') unop};
-unop    =   {'-'} term;
-term    =   ('(' expr ')') | integer;
-integer =   digit{digit};
-```
+
+The results will be printed to stdout, and in JSON format to the the file `results.json`.
